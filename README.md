@@ -1,1 +1,1 @@
-Roma gey
+Roma gay
