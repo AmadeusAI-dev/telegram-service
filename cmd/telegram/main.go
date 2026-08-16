@@ -17,16 +17,21 @@ func main() {
 	}
 
 	err = client.Run(ctx, func(ctx context.Context) error {
-
-		api := client.API()
-
-		ds, err := api.HelpGetNearestDC(ctx)
+		status, err := client.Auth().Status(ctx)
 		if err != nil {
-			// will be removed; example code
-			panic(err)
+			log.Fatalf("failed to get auth status: %v", err)
 		}
 
-		log.Println("ds: %w", ds)
+		if !status.Authorized {
+			log.Fatalf("auth session is invalid. Please, update session")
+		}
+
+		// api := client.API()
+
+		// it's temp example code; it will be removed soon
+		self, _ := client.Self(ctx)
+		log.Printf("Logged in as %s", self.Username)
+
 		return nil
 	})
 }
