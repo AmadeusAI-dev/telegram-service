@@ -22,19 +22,40 @@ func DispatchNewMessages(bus *pubsub.Pubsub, d *tg.UpdateDispatcher) {
 			return nil
 		}
 
-		err := bus.Dispatch(ctx, pubsub.Event{
-			Type: "new_message",
-			Payload: map[string]any{
-				"message": m.Message,
-				"chat_id": m.PeerID.TypeID(),
-			},
-		})
-		if err != nil {
-			slog.Error("failed to dispatch new message", "error", err, "chat_id", m.PeerID.TypeID(), "message_id", m.ID)
+		user, ok := m.FromID.(*tg.PeerUser)
+		if !ok {
+			slog.Error("failed to get user from message")
 			return nil
 		}
 
-		slog.Info("dispatched new message", "chat_id", m.PeerID.TypeID(), "message_id", m.ID, "message", m.Message)
+		err := bus.Dispatch(ctx, pubsub.Event{
+			Type: "new_message",
+			Payload: map[string]any{
+				"user_id":    user.UserID,
+				"chat_id":    user.UserID,
+				"message_id": m.ID,
+				"message":    m.Message,
+			},
+		})
+		if err != nil {
+			slog.Error(
+				"failed to dispatch new message",
+				"error", err,
+				"user_id", user.UserID,
+				"chat_id", user.UserID,
+				"message_id", m.ID,
+				"message", m.Message,
+			)
+			return nil
+		}
+
+		slog.Info(
+			"dispatched new message",
+			"user_id", user.UserID,
+			"chat_id", user.UserID,
+			"message_id", m.ID,
+			"message", m.Message,
+		)
 		return nil
 	})
 }
