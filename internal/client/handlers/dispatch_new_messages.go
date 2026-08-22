@@ -17,6 +17,11 @@ func DispatchNewMessages(bus *pubsub.Pubsub, d *tg.UpdateDispatcher) {
 			return nil
 		}
 
+		if m.Out {
+			// ignore its own messages
+			return nil
+		}
+
 		err := bus.Dispatch(ctx, pubsub.Event{
 			Type: "new_message",
 			Payload: map[string]any{
