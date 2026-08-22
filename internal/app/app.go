@@ -64,3 +64,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	return nil
 }
+
+func (a *App) Close(ctx context.Context) error {
+	return a.pubsub.Close(ctx)
+}

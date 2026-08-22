@@ -3,14 +3,21 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os/signal"
+	"syscall"
 
 	"github.com/AmadeusAI-dev/telegram-service/internal/app"
 	"github.com/AmadeusAI-dev/telegram-service/internal/config"
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
 
 	cfg := config.Load()
 
@@ -19,7 +26,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := application.Run(ctx); err != nil {
+	if err := run(application, ctx); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func run(application *app.App, ctx context.Context) error {
+	defer func() {
+		err := application.Close(ctx)
+		if err != nil {
+			slog.Error("failed to close application", "error", err)
+		}
+	}()
+
+	return application.Run(ctx)
 }
