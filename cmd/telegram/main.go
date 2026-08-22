@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/AmadeusAI-dev/telegram-service/internal/client/handlers"
 	"github.com/AmadeusAI-dev/telegram-service/internal/config"
@@ -14,6 +16,9 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 
 	config := config.Load()
 
