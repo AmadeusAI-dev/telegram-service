@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/AmadeusAI-dev/telegram-service/internal/app"
 	"github.com/AmadeusAI-dev/telegram-service/internal/config"
@@ -32,12 +33,20 @@ func main() {
 }
 
 func run(application *app.App, ctx context.Context) error {
-	defer func() {
-		err := application.Close(ctx)
-		if err != nil {
-			slog.Error("failed to close application", "error", err)
-		}
-	}()
+	defer shutdown(application)
 
 	return application.Run(ctx)
+}
+
+func shutdown(application *app.App) {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		time.Second*30,
+	)
+	defer cancel()
+
+	err := application.Close(ctx)
+	if err != nil {
+		slog.Error("failed to close application", "error", err)
+	}
 }
