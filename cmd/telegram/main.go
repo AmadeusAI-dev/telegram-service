@@ -49,4 +49,6 @@ func shutdown(application *app.App) {
 	if err != nil {
 		slog.Error("failed to close application", "error", err)
 	}
+
+	slog.Info("application stopped successfully")
 }

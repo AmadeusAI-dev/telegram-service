@@ -56,6 +56,8 @@ func (a *App) Run(ctx context.Context) error {
 			return fmt.Errorf("auth session is invalid. Please, update session")
 		}
 
+		slog.Info("application started successfully")
+
 		return telegram.RunUntilCanceled(ctx, a.client)
 	})
 	if err != nil {
