@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/TheKiryuKha/pubsub"
@@ -25,13 +24,12 @@ func DispatchNewMessages(bus *pubsub.Pubsub, d *tg.UpdateDispatcher) {
 				"chat_id": m.PeerID.TypeID(),
 			},
 		})
-
 		if err != nil {
 			slog.Error("failed to dispatch new message", "error", err, "chat_id", m.PeerID.TypeID(), "message_id", m.ID)
 			return nil
 		}
 
-		fmt.Printf("message: %s\n", m.Message)
+		slog.Info("dispatched new message", "chat_id", m.PeerID.TypeID(), "message_id", m.ID, "message", m.Message)
 		return nil
 	})
 }
