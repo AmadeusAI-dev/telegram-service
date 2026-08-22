@@ -6,3 +6,4 @@ up:
 
 authorize:
 	@go run ./tools/authorize
+
