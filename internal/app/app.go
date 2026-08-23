@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/AmadeusAI-dev/telegram-service/internal/client"
 	"github.com/AmadeusAI-dev/telegram-service/internal/client/handlers"
 	"github.com/AmadeusAI-dev/telegram-service/internal/config"
 	"github.com/TheKiryuKha/pubsub"
@@ -46,25 +47,22 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	err := a.client.Run(ctx, func(ctx context.Context) error {
-		status, err := a.client.Auth().Status(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to get auth status: %w", err)
-		}
+	runCh := make(chan error, 1)
 
-		if !status.Authorized {
-			return fmt.Errorf("auth session is invalid. Please, update session")
-		}
-
-		slog.Info("application started successfully")
-
-		return telegram.RunUntilCanceled(ctx, a.client)
-	})
-	if err != nil {
-		return fmt.Errorf("failed to run telegram client: %w", err)
+	initCh := client.Initialize(ctx, a.client, runCh)
+	if err := client.WaitForInitialization(ctx, initCh); err != nil {
+		return err
 	}
 
-	return nil
+	slog.Info("application started successfully")
+
+	select {
+	case err := <-runCh:
+		return fmt.Errorf("telegram client stopped: %w", err)
+
+	case <-ctx.Done():
+		return nil
+	}
 }
 
 func (a *App) Close(ctx context.Context) error {
