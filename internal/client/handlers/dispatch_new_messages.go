@@ -8,8 +8,11 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-func DispatchNewMessages(bus *pubsub.Pubsub, d *tg.UpdateDispatcher) {
+type Bus interface {
+	Dispatch(context.Context, pubsub.Event) error
+}
 
+func DispatchNewMessages(bus Bus, d *tg.UpdateDispatcher) {
 	d.OnNewMessage(func(ctx context.Context, e tg.Entities, u *tg.UpdateNewMessage) error {
 		m, ok := u.Message.(*tg.Message)
 		if !ok {
