@@ -24,7 +24,7 @@ var expectedEvent = pubsub.Event{
 	Type: "new_message",
 	Payload: map[string]any{
 		"user_id":    int64(456),
-		"chat_id":    int64(456),
+		"username":   "@arbidoltash1",
 		"message_id": 123,
 		"message":    "Hello, World!",
 	},
@@ -67,14 +67,19 @@ func TestHandler(t *testing.T) {
 func sentMessage(t testing.TB, d *tg.UpdateDispatcher, ownMessage bool) error {
 	t.Helper()
 
-	return d.Handle(context.Background(), &tg.UpdateShort{
-		Update: &tg.UpdateNewMessage{
-			Message: &tg.Message{
-				ID:      123,
-				Message: "Hello, World!",
-				Out:     ownMessage,
-				FromID:  &tg.PeerUser{UserID: 456},
+	return d.Handle(context.Background(), &tg.Updates{
+		Updates: []tg.UpdateClass{
+			&tg.UpdateNewMessage{
+				Message: &tg.Message{
+					ID:      123,
+					Message: "Hello, World!",
+					Out:     ownMessage,
+					FromID:  &tg.PeerUser{UserID: 456},
+				},
 			},
+		},
+		Users: []tg.UserClass{
+			&tg.User{ID: 456, Username: "@arbidoltash1", FirstName: "Femboy"},
 		},
 	})
 }

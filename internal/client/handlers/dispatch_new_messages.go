@@ -27,7 +27,7 @@ func DispatchNewMessages(bus Bus, d *tg.UpdateDispatcher) {
 
 		user, ok := m.FromID.(*tg.PeerUser)
 		if !ok {
-			slog.Error("failed to get user from message")
+			slog.Error("failed to get PeerUser from message")
 			return nil
 		}
 
@@ -35,7 +35,6 @@ func DispatchNewMessages(bus Bus, d *tg.UpdateDispatcher) {
 			Type: "new_message",
 			Payload: map[string]any{
 				"user_id":    user.UserID,
-				"chat_id":    user.UserID,
 				"message_id": m.ID,
 				"message":    m.Message,
 			},
@@ -45,7 +44,6 @@ func DispatchNewMessages(bus Bus, d *tg.UpdateDispatcher) {
 				"failed to dispatch new message",
 				"error", err,
 				"user_id", user.UserID,
-				"chat_id", user.UserID,
 				"message_id", m.ID,
 				"message", m.Message,
 			)
@@ -55,7 +53,6 @@ func DispatchNewMessages(bus Bus, d *tg.UpdateDispatcher) {
 		slog.Info(
 			"dispatched new message",
 			"user_id", user.UserID,
-			"chat_id", user.UserID,
 			"message_id", m.ID,
 			"message", m.Message,
 		)
