@@ -8,15 +8,15 @@ import (
 )
 
 type SpySender struct {
-	calls   int
-	chat_id int
-	message string
+	calls    int
+	username string
+	message  string
 }
 
-func (s *SpySender) Send(ctx context.Context, chat_id int, message string) error {
+func (s *SpySender) Send(ctx context.Context, username string, message string) error {
 	s.calls++
 	s.message = message
-	s.chat_id = chat_id
+	s.username = username
 	return nil
 }
 
@@ -30,8 +30,8 @@ func TestSendsMessage(t *testing.T) {
 	params := &mcp.CallToolParams{
 		Name: "send_message",
 		Arguments: map[string]any{
-			"chat_id": 123,
-			"message": "Hello, World!",
+			"username": "TheKiryuKha",
+			"message":  "Hello, World!",
 		},
 	}
 	res, err := cs.CallTool(ctx, params)
@@ -45,8 +45,8 @@ func TestSendsMessage(t *testing.T) {
 	if sender.calls != 1 {
 		t.Fatalf("expected sender to be called %d, got %d", 1, sender.calls)
 	}
-	if sender.chat_id != 123 {
-		t.Fatalf("expected chat_id to be %d, got %d", 123, sender.chat_id)
+	if sender.username != "TheKiryuKha" {
+		t.Fatalf("expected chat_id to be %s, got %s", "TheKiryuKha", sender.username)
 	}
 	if sender.message != "Hello, World!" {
 		t.Fatalf("expected sent message to be '%s', got '%s'", "Hello, World!", sender.message)

@@ -60,7 +60,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	sender := &client.Sender{Client: tgClient}
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "send_message",
-		Description: "sends message to specific telegram chat, based on the chat_id",
+		Description: "sends message to specific telegram user, based on the username",
 	}, tools.SendMessageTool(sender))
 
 	handler := mcp.NewStreamableHTTPHandler(func(r *http.Request) *mcp.Server {

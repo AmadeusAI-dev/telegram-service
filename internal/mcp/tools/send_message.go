@@ -8,12 +8,12 @@ import (
 )
 
 type Sender interface {
-	Send(context.Context, int, string) error
+	Send(context.Context, string, string) error
 }
 
 type Input struct {
-	ChatID  int    `json:"chat_id" jsonschema:"the id of the chat where message should be sent"`
-	Message string `json:"message" jsonschema:"the message to be sent"`
+	Username string `json:"username" jsonschema:"the username of the message recipient"`
+	Message  string `json:"message" jsonschema:"the message to be sent"`
 }
 
 type Output struct {
@@ -26,7 +26,7 @@ func SendMessageTool(sender Sender) mcp.ToolHandlerFor[Input, Output] {
 		Output,
 		error,
 	) {
-		err := sender.Send(ctx, input.ChatID, input.Message)
+		err := sender.Send(ctx, input.Username, input.Message)
 		if err != nil {
 			slog.Error("failed to sent message", "err", err)
 		}
