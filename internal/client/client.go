@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/gotd/td/telegram"
+	"github.com/gotd/td/telegram/peers"
+	"github.com/gotd/td/telegram/updates"
 )
 
-func Initialize(ctx context.Context, client *telegram.Client, runCh chan<- error) <-chan error {
+func Initialize(ctx context.Context, client *telegram.Client, peerManager *peers.Manager, gaps *updates.Manager, runCh chan<- error) <-chan error {
 	initCh := make(chan error, 1)
 
 	go func() {
@@ -23,6 +25,24 @@ func Initialize(ctx context.Context, client *telegram.Client, runCh chan<- error
 				initCh <- fmt.Errorf("auth session is invalid. Please, update session")
 				return nil
 			}
+
+			if err := peerManager.Init(ctx); err != nil {
+				initCh <- fmt.Errorf("error while initializing peerManager: %w", err)
+				return nil
+			}
+
+			u, err := peerManager.Self(ctx)
+			if err != nil {
+				initCh <- fmt.Errorf("error while getting PeerManager.Self(): %w", err)
+				return nil
+			}
+
+			go func() {
+				err = gaps.Run(ctx, client.API(), u.ID(), updates.AuthOptions{IsBot: false})
+				if err != nil {
+					initCh <- fmt.Errorf("error while gaps.Run(): %w", err)
+				}
+			}()
 
 			initCh <- nil
 
