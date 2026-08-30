@@ -4,7 +4,9 @@ go 1.26.3
 
 require (
 	github.com/TheKiryuKha/pubsub v0.0.1
+	github.com/google/go-cmp v0.7.0
 	github.com/gotd/td v0.161.0
+	github.com/modelcontextprotocol/go-sdk v1.7.0
 )
 
 require (
@@ -29,7 +31,6 @@ require (
 	github.com/klauspost/compress v1.19.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
-	github.com/modelcontextprotocol/go-sdk v1.7.0 // indirect
 	github.com/ogen-go/ogen v1.23.0 // indirect
 	github.com/rabbitmq/rabbitmq-amqp-go-client v1.3.0 // indirect
 	github.com/refraction-networking/utls v1.8.2 // indirect

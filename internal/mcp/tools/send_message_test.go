@@ -2,9 +2,11 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
+	"github.com/gotd/td/tgerr"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -21,27 +23,39 @@ func (s *SpySender) Send(ctx context.Context, username string, message string) e
 	return nil
 }
 
+var (
+	UserNameIsNotOcupied = tgerr.New(400, "USERNAME_NOT_OCCUPIED")
+	UserNameIsInvalid    = tgerr.New(400, "USERNAME_INVALID")
+	UnkownError          = errors.New("sender: unkown error")
+)
+
+type ErrorSender struct {
+	errorToSend error
+}
+
+func (e *ErrorSender) Send(ctx context.Context, username string, message string) error {
+	return e.errorToSend
+}
+
 func TestSendsMessage(t *testing.T) {
-	ctx := context.Background()
 	server, cs := NewTestMcp(t)
 	sender := &SpySender{}
 
 	mcp.AddTool(server, SendMessageToolInfo(), SendMessageTool(sender))
 
-	params := &mcp.CallToolParams{
-		Name: "send_message",
-		Arguments: map[string]any{
-			"username": "TheKiryuKha",
-			"message":  "Hello, World!",
+	got := callTool(t, cs, "send_message", map[string]any{
+		"username": "TheKiryuKha",
+		"message":  "Hello, World!",
+	})
+
+	want := &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: `{"result":"message sent successfully"}`},
 		},
+		StructuredContent: map[string]any{"result": "message sent successfully"},
 	}
-	res, err := cs.CallTool(ctx, params)
-	if err != nil {
-		t.Fatalf("error while calling tool: %v", err)
-	}
-	if res.IsError {
-		t.Fatalf("tool call returned error: %v", res)
-	}
+
+	assertCallToolResultsMatch(t, got, want)
 
 	if sender.calls != 1 {
 		t.Fatalf("expected sender to be called %d, got %d", 1, sender.calls)
@@ -52,6 +66,52 @@ func TestSendsMessage(t *testing.T) {
 	if sender.message != "Hello, World!" {
 		t.Fatalf("expected sent message to be '%s', got '%s'", "Hello, World!", sender.message)
 	}
+}
+
+func TestReturnsErrorsFromSender(t *testing.T) {
+	tests := map[string]struct {
+		senderError error
+		mcpError    error
+	}{
+		"UserNameIsNotOcupied": {
+			UserNameIsNotOcupied,
+			UserNameNotFound,
+		},
+		"UserNameInvalid": {
+			UserNameIsInvalid,
+			UserNameNotFound,
+		},
+		"UnkownError": {
+			UnkownError,
+			FailedToSendMessage,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			server, cs := NewTestMcp(t)
+			sender := &ErrorSender{test.senderError}
+
+			mcp.AddTool(server, SendMessageToolInfo(), SendMessageTool(sender))
+
+			got := callTool(t, cs, "send_message", map[string]any{
+				"username": "TheKiryuKha",
+				"message":  "Hi!",
+			})
+
+			want := &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{
+						Text: test.mcpError.Error(),
+					},
+				},
+				IsError: true,
+			}
+
+			assertCallToolResultsMatch(t, got, want)
+		})
+	}
+
 }
 
 func TestInfo(t *testing.T) {
@@ -65,29 +125,4 @@ func TestInfo(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("mcp tool info mismatch. got: %v, want: %v", got, want)
 	}
-}
-
-// @todo: move to helpers_test.go when we get new tools
-func NewTestMcp(t testing.TB) (*mcp.Server, *mcp.ClientSession) {
-	t.Helper()
-
-	ctx := context.Background()
-	server := mcp.NewServer(&mcp.Implementation{Name: "test", Version: "v1.0.0"}, nil)
-	client := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "v1.0.0"}, nil)
-	serverTransport, clientTransport := mcp.NewInMemoryTransports()
-	serverSession, err := server.Connect(ctx, serverTransport, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	clientSession, err := client.Connect(ctx, clientTransport, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Cleanup(func() {
-		serverSession.Close()
-		clientSession.Close()
-	})
-
-	return server, clientSession
 }

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/message"
@@ -17,7 +16,7 @@ func (s *Sender) Send(ctx context.Context, Username string, msg string) error {
 
 	_, err := sender.Resolve(Username).Text(ctx, msg)
 	if err != nil {
-		return fmt.Errorf("failed to send telegram message: %w", err)
+		return err
 	}
 
 	return nil
