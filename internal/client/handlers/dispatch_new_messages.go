@@ -39,6 +39,7 @@ func DispatchNewMessages(bus Bus, repo UserRepo, d *tg.UpdateDispatcher) {
 		user, err := repo.Get(ctx, int(PeerUser.UserID))
 		if err != nil {
 			slog.Error("failed to get user", "errors", err)
+			return nil
 		}
 
 		err = bus.Dispatch(ctx, pubsub.Event{

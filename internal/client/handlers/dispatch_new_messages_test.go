@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -22,11 +23,16 @@ func (s *SpyBus) Dispatch(ctx context.Context, event pubsub.Event) error {
 }
 
 type SpyRepo struct {
-	calls int
+	calls     int
+	WantError bool
 }
 
 func (s *SpyRepo) Get(ctx context.Context, user_id int) (client.User, error) {
 	s.calls++
+	if s.WantError {
+		return client.User{}, fmt.Errorf("repo failed")
+	}
+
 	return client.User{ID: user_id, Username: "mr_TheKiryuKha"}, nil
 }
 
@@ -46,18 +52,28 @@ func TestHandler(t *testing.T) {
 		wantBusCalls  int
 		wantEvents    []pubsub.Event
 		wantRepoCalls int
+		wantRepoError bool
 	}{
 		"new message": {
 			ownMessage:    false,
 			wantBusCalls:  1,
 			wantEvents:    []pubsub.Event{expectedEvent},
 			wantRepoCalls: 1,
+			wantRepoError: false,
 		},
 		"new own message": {
 			ownMessage:    true,
 			wantBusCalls:  0,
 			wantEvents:    nil,
 			wantRepoCalls: 0,
+			wantRepoError: false,
+		},
+		"repo returned error": {
+			ownMessage:    false,
+			wantBusCalls:  0,
+			wantEvents:    nil,
+			wantRepoCalls: 1,
+			wantRepoError: true,
 		},
 	}
 
@@ -65,7 +81,7 @@ func TestHandler(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			d := tg.NewUpdateDispatcher()
 			bus := &SpyBus{}
-			repo := &SpyRepo{}
+			repo := &SpyRepo{WantError: test.wantRepoError}
 
 			DispatchNewMessages(bus, repo, &d)
 			err := sentMessage(t, &d, test.ownMessage)
