@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strings"
 
 	"github.com/gotd/td/tg"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -44,16 +45,23 @@ func SendMessageTool(sender Sender) mcp.ToolHandlerFor[Input, Output] {
 		if err != nil {
 			switch {
 			case tg.IsUsernameNotOccupied(err), tg.IsUsernameInvalid(err):
-				return nil, Output{Result: "failed to sent message"}, UserNameNotFound
+				err = UserNameNotFound
+
+			case strings.Contains(err.Error(), "can't resolve phone"):
+				err = UserNameNotFound
+
+			default:
+
+				slog.Error(
+					"failed to send message",
+					"error", err,
+					"username", input.Username,
+					"message", input.Message,
+				)
+				err = FailedToSendMessage
 			}
 
-			slog.Error(
-				"failed to send message",
-				"error", err,
-				"username", input.Username,
-				"message", input.Message,
-			)
-			return nil, Output{Result: "failed to sent message"}, FailedToSendMessage
+			return nil, Output{Result: "failed to sent message"}, err
 		}
 
 		return nil, Output{Result: "message sent successfully"}, nil

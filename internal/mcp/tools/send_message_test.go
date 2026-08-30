@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -27,6 +28,7 @@ var (
 	UserNameIsNotOcupied = tgerr.New(400, "USERNAME_NOT_OCCUPIED")
 	UserNameIsInvalid    = tgerr.New(400, "USERNAME_INVALID")
 	UnkownError          = errors.New("sender: unkown error")
+	CantResolvePhone     = fmt.Errorf("can't resolve phone %q", "279ргвгкусгр892")
 )
 
 type ErrorSender struct {
@@ -84,6 +86,10 @@ func TestReturnsErrorsFromSender(t *testing.T) {
 		"UnkownError": {
 			UnkownError,
 			FailedToSendMessage,
+		},
+		"CantResolvePhone": {
+			CantResolvePhone,
+			UserNameNotFound,
 		},
 	}
 
