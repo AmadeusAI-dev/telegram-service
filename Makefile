@@ -1,4 +1,4 @@
-include .env
+-include .env
 export
 
 up:
@@ -7,8 +7,11 @@ up:
 authorize:
 	@go run ./tools/authorize
 
-lint:
+fmt:
 	@go fmt ./...
+
+lint:
+	@test -z "$$(gofmt -l .)"
 
 test:
 	@go vet ./...
