@@ -53,6 +53,7 @@ func TestSendsMessage(t *testing.T) {
 	}
 }
 
+// use real server right here
 func NewTestMcp(t testing.TB) (*mcp.Server, *mcp.ClientSession) {
 	t.Helper()
 
