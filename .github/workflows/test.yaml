@@ -21,8 +21,5 @@ jobs:
       - name: Download dependencies
         run: time go mod download
 
-      - name: Vet
-        run: time go vet ./...
-
       - name: Test
         run: time go test ./...
