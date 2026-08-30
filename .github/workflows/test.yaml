@@ -18,5 +18,11 @@ jobs:
           go-version-file: go.mod 
           cache: true
 
-      - name: Run tests
-        run: make test 
+      - name: Download dependencies
+        run: time go mod download
+
+      - name: Vet
+        run: time go vet ./...
+
+      - name: Test
+        run: time go test ./...
