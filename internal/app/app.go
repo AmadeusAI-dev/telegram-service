@@ -55,6 +55,8 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	})
 	h = gaps
 
+	// === mcp ====
+	// @todo: move to mcp.Create server or smth like that
 	server := mcp.NewServer(&mcp.Implementation{Name: "telegram-mcp", Version: "1.0.0"}, nil)
 
 	sender := &client.Sender{Client: tgClient}
@@ -69,6 +71,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 
 	url := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 
+	// ==== pubsub + handlers ====
 	bus, err := pubsub.New(ctx, cfg.RabbitMq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to init pubsub: %w", err)
