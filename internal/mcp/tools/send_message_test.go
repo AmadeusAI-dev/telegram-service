@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -25,7 +26,7 @@ func TestSendsMessage(t *testing.T) {
 	server, cs := NewTestMcp(t)
 	sender := &SpySender{}
 
-	mcp.AddTool(server, &mcp.Tool{Name: "send_message", Description: "sents message"}, SendMessageTool(sender))
+	mcp.AddTool(server, SendMessageToolInfo(), SendMessageTool(sender))
 
 	params := &mcp.CallToolParams{
 		Name: "send_message",
@@ -53,7 +54,20 @@ func TestSendsMessage(t *testing.T) {
 	}
 }
 
-// use real server right here
+func TestInfo(t *testing.T) {
+	want := &mcp.Tool{
+		Name:        "send_message",
+		Description: "sends message to specific telegram user, based on the username",
+	}
+
+	got := SendMessageToolInfo()
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("mcp tool info mismatch. got: %v, want: %v", got, want)
+	}
+}
+
+// @todo: move to helpers_test.go when we get new tools
 func NewTestMcp(t testing.TB) (*mcp.Server, *mcp.ClientSession) {
 	t.Helper()
 

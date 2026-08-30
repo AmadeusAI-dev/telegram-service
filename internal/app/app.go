@@ -4,14 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 
 	"github.com/AmadeusAI-dev/telegram-service/internal/client"
 	"github.com/AmadeusAI-dev/telegram-service/internal/client/handlers"
 	"github.com/AmadeusAI-dev/telegram-service/internal/config"
 	"github.com/AmadeusAI-dev/telegram-service/internal/mcp/server"
-	"github.com/AmadeusAI-dev/telegram-service/internal/mcp/tools"
 	"github.com/TheKiryuKha/pubsub"
 	"github.com/gotd/td/telegram"
 	"github.com/gotd/td/telegram/peers"
@@ -27,8 +25,8 @@ type App struct {
 	peersManager *peers.Manager
 	gaps         *updates.Manager
 
-	mcpHandler *mcp.StreamableHTTPHandler
-	url        string
+	server *mcp.Server
+	url    string
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
@@ -56,18 +54,8 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	h = gaps
 
 	// === mcp ====
-	// @todo: move to mcp.Create server or smth like that
-	server := mcp.NewServer(&mcp.Implementation{Name: "telegram-mcp", Version: "1.0.0"}, nil)
-
 	sender := &client.Sender{Client: tgClient}
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "send_message",
-		Description: "sends message to specific telegram user, based on the username",
-	}, tools.SendMessageTool(sender))
-
-	handler := mcp.NewStreamableHTTPHandler(func(r *http.Request) *mcp.Server {
-		return server
-	}, nil)
+	server := server.New(sender)
 
 	url := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 
@@ -83,7 +71,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	return &App{
 		pubsub:       bus,
 		client:       tgClient,
-		mcpHandler:   handler,
+		server:       server,
 		url:          url,
 		peersManager: peerManager,
 		gaps:         gaps,
@@ -99,7 +87,7 @@ func (a *App) Run(ctx context.Context) error {
 		return err
 	}
 
-	server.Run(runMcpCh, a.url, a.mcpHandler)
+	server.Run(runMcpCh, a.url, a.server)
 
 	slog.Info("application started successfully")
 
