@@ -18,8 +18,15 @@ jobs:
           go-version-file: go.mod 
           cache: true
 
+      - name: Go cache
+        run: |
+          go env GOCACHE
+          du -sh "$(go env GOCACHE)" || true
+
       - name: Download dependencies
         run: time go mod download
 
       - name: Test
+        env:
+          GODEBUG: gocachetest=1
         run: time go test ./...
