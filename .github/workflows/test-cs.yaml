@@ -1,0 +1,22 @@
+name: Check code style
+
+on: pull_request
+
+jobs:
+  lint:
+    name: Check code style 
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Project
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+        
+      - name: Check code style
+        run: make lint

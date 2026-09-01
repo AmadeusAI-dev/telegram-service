@@ -1,0 +1,23 @@
+name: Run Tests
+
+on: pull_request
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Project
+        uses: actions/checkout@v6
+      
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod 
+          cache: true
+
+      - name: Test
+        run: make test
+
